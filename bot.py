@@ -39,21 +39,14 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS users(
 id INTEGER PRIMARY KEY,
 referrer INTEGER,
-referrals INTEGER DEFAULT 0
+referrals INTEGER DEFAULT 0,
+balance INTEGER DEFAULT 0
 )
 """)
 
 db.commit()
 # ===== MENU PRINCIPAL =====
 
-MAIN_MENU = ReplyKeyboardMarkup(
-    [
-        ["📱 MTN", "🟠 Orange"],
-        ["👤 Mon compte", "👥 Parrainage"],
-        ["🎁 Bonus", "📞 Support"],
-    ],
-    resize_keyboard=True,
-)
 
 def register_user(user_id, referrer=None):
     cursor.execute("SELECT id FROM users WHERE id=?", (user_id,))
@@ -74,7 +67,13 @@ def register_user(user_id, referrer=None):
     db.commit()
 
 
-# ===== MENU =====
+try:
+    cursor.execute(
+        "ALTER TABLE users ADD COLUMN balance INTEGER DEFAULT 0"
+    )
+    db.commit()
+except:
+    pass
 
 
 # ===== MENU PRINCIPAL =====
@@ -83,6 +82,7 @@ MAIN_MENU = ReplyKeyboardMarkup(
     [
         ["💸 Faire un retrait MTN"],
         ["💸 Faire un retrait Orange"],
+        ["💰 Mon solde"],
         ["❓ Comment ça marche"],
         ["👤 Mon compte", "👥 Parrainage"],
         ["🎁 Bonus"],
@@ -98,23 +98,75 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user = update.effective_user
 
-    if text == "💸 Faire un retrait MTN":
+
+    if text == "💰 Mon solde":
+
+        cursor.execute(
+            "SELECT balance FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        solde = result[0] if result else 0
+
+        await update.message.reply_text(
+            f"💰 Votre solde actuel est : {solde} FCFA"
+        )
+
+
+    elif text == "💸 Faire un retrait MTN":
+
+        cursor.execute(
+            "SELECT balance FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        solde = result[0] if result else 0
+
+        if solde < 5000:
+
+            await update.message.reply_text(
+                "❌ Erreur : solde insuffisant.\n\n"
+                "Le retrait minimum est de 5 000 FCFA."
+            )
+            return
+
 
         await update.message.reply_text(
             "💸 Retrait MTN\n\n"
-            "Pour effectuer un retrait MTN, envoyez :\n\n"
-            "📱 Votre numéro MTN\n"
-            "💰 Le montant souhaité"
+            "Votre demande peut être traitée.\n\n"
+            "Envoyez votre numéro MTN et le montant souhaité."
         )
 
 
     elif text == "💸 Faire un retrait Orange":
 
+        cursor.execute(
+            "SELECT balance FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        solde = result[0] if result else 0
+
+
+        if solde < 5000:
+
+            await update.message.reply_text(
+                "❌ Erreur : solde insuffisant.\n\n"
+                "Le retrait minimum est de 5 000 FCFA."
+            )
+            return
+
+
         await update.message.reply_text(
             "💸 Retrait Orange\n\n"
-            "Pour effectuer un retrait Orange, envoyez :\n\n"
-            "📱 Votre numéro Orange\n"
-            "💰 Le montant souhaité"
+            "Votre demande peut être traitée.\n\n"
+            "Envoyez votre numéro Orange et le montant souhaité."
         )
 
 
@@ -170,6 +222,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result = cursor.fetchone()
 
         referrals = result[0] if result else 0
+
 
         if referrals >= 20:
 
