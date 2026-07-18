@@ -77,24 +77,59 @@ def register_user(user_id, referrer=None):
 # ===== MENU =====
 
 
+# ===== MENU PRINCIPAL =====
+
+MAIN_MENU = ReplyKeyboardMarkup(
+    [
+        ["💸 Faire un retrait MTN"],
+        ["💸 Faire un retrait Orange"],
+        ["❓ Comment ça marche"],
+        ["👤 Mon compte", "👥 Parrainage"],
+        ["🎁 Bonus"],
+    ],
+    resize_keyboard=True,
+)
+
+
+# ===== MENU =====
+
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
     user = update.effective_user
 
-    if text == "📱 MTN":
+    if text == "💸 Faire un retrait MTN":
 
         await update.message.reply_text(
-            "📱 Bienvenue dans l'espace MTN.\n\n"
-            "Choisissez une option prochainement."
+            "💸 Retrait MTN\n\n"
+            "Pour effectuer un retrait MTN, envoyez :\n\n"
+            "📱 Votre numéro MTN\n"
+            "💰 Le montant souhaité"
         )
 
-    elif text == "🟠 Orange":
+
+    elif text == "💸 Faire un retrait Orange":
 
         await update.message.reply_text(
-            "🟠 Bienvenue dans l'espace Orange.\n\n"
-            "Choisissez une option prochainement."
+            "💸 Retrait Orange\n\n"
+            "Pour effectuer un retrait Orange, envoyez :\n\n"
+            "📱 Votre numéro Orange\n"
+            "💰 Le montant souhaité"
         )
+
+
+    elif text == "❓ Comment ça marche":
+
+        await update.message.reply_text(
+            "🎉 Gagnez jusqu’à 5 000 FCFA grâce au partage ! 💰\n\n"
+            "Invitez vos amis à rejoindre notre bot en partageant votre lien de parrainage personnel.\n\n"
+            "✅ Objectif : atteindre le nombre de partages ou de filleuls requis.\n\n"
+            "🎁 Récompense : recevez 5 000 FCFA une fois l’objectif atteint et validé.\n\n"
+            "🔗 Partagez votre lien dès maintenant et commencez à gagner !\n\n"
+            "⚠️ Seuls les partages et les inscriptions valides sont pris en compte. "
+            "Toute tentative de fraude entraînera l’annulation des récompenses."
+        )
+
 
     elif text == "👤 Mon compte":
 
@@ -113,6 +148,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"👥 Filleuls : {referrals}"
         )
 
+
     elif text == "👥 Parrainage":
 
         bot_username = (await context.bot.get_me()).username
@@ -122,6 +158,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"👥 Ton lien de parrainage :\n\n{link}"
         )
+
 
     elif text == "🎁 Bonus":
 
@@ -147,13 +184,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 f"🎁 Il vous manque encore {reste} filleul(s) pour débloquer votre bonus."
             )
-
-    elif text == "📞 Support":
-
-        await update.message.reply_text(
-            "📞 Support\n\n"
-            "Contactez-nous : @bi_kakk"
-        )
+    
 # ===== /START =====
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
