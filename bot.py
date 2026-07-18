@@ -44,7 +44,16 @@ referrals INTEGER DEFAULT 0
 """)
 
 db.commit()
+# ===== MENU PRINCIPAL =====
 
+MAIN_MENU = ReplyKeyboardMarkup(
+    [
+        ["📱 MTN", "🟠 Orange"],
+        ["👤 Mon compte", "👥 Parrainage"],
+        ["🎁 Bonus", "📞 Support"],
+    ],
+    resize_keyboard=True,
+)
 
 def register_user(user_id, referrer=None):
     cursor.execute("SELECT id FROM users WHERE id=?", (user_id,))
@@ -67,21 +76,84 @@ def register_user(user_id, referrer=None):
 
 # ===== MENU =====
 
-MAIN_MENU = ReplyKeyboardMarkup(
-    [
-        ["📱 MTN", "🟠 Orange"],
-        ["👤 Mon compte", "👥 Parrainage"],
-        ["🎁 Bonus", "📞 Support"],
-    ],
-    resize_keyboard=True,
-)
 
-elif text == "📞 Support":
+async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    await update.message.reply_text(
-        "📞 Support\n\n"
-        "Contactez-nous : @bi_kakk"
-    )
+    text = update.message.text
+    user = update.effective_user
+
+    if text == "📱 MTN":
+
+        await update.message.reply_text(
+            "📱 Bienvenue dans l'espace MTN.\n\n"
+            "Choisissez une option prochainement."
+        )
+
+    elif text == "🟠 Orange":
+
+        await update.message.reply_text(
+            "🟠 Bienvenue dans l'espace Orange.\n\n"
+            "Choisissez une option prochainement."
+        )
+
+    elif text == "👤 Mon compte":
+
+        cursor.execute(
+            "SELECT referrals FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        referrals = result[0] if result else 0
+
+        await update.message.reply_text(
+            f"👤 Mon compte\n\n"
+            f"🆔 ID : {user.id}\n"
+            f"👥 Filleuls : {referrals}"
+        )
+
+    elif text == "👥 Parrainage":
+
+        bot_username = (await context.bot.get_me()).username
+
+        link = f"https://t.me/{bot_username}?start={user.id}"
+
+        await update.message.reply_text(
+            f"👥 Ton lien de parrainage :\n\n{link}"
+        )
+
+    elif text == "🎁 Bonus":
+
+        cursor.execute(
+            "SELECT referrals FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        referrals = result[0] if result else 0
+
+        if referrals >= 20:
+
+            await update.message.reply_text(
+                "🎉 Félicitations ! Vous pouvez réclamer votre récompense."
+            )
+
+        else:
+
+            reste = 20 - referrals
+
+            await update.message.reply_text(
+                f"🎁 Il vous manque encore {reste} filleul(s) pour débloquer votre bonus."
+            )
+
+    elif text == "📞 Support":
+
+        await update.message.reply_text(
+            "📞 Support\n\n"
+            "Contactez-nous : @bi_kakk"
+        )
 # ===== /START =====
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,76 +196,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "« ✅ J'ai rejoint ».",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    text = update.message.text
-    user = update.effective_user
-
-    if text == "📱 MTN":
-        await update.message.reply_text(
-            "📱 Bienvenue dans l'espace MTN.\n\n"
-            "Choisissez une option prochainement."
-        )
-
-    elif text == "🟠 Orange":
-        await update.message.reply_text(
-            "🟠 Bienvenue dans l'espace Orange.\n\n"
-            "Choisissez une option prochainement."
-        )
-
-    elif text == "👤 Mon compte":
-
-        cursor.execute(
-            "SELECT referrals FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        referrals = result[0] if result else 0
-
-        await update.message.reply_text(
-            f"👤 Mon compte\n\n"
-            f"🆔 ID : {user.id}\n"
-            f"👥 Filleuls : {referrals}"
-        )
-
-    elif text == "👥 Parrainage":
-
-        bot_username = (await context.bot.get_me()).username
-
-        link = f"https://t.me/{bot_username}?start={user.id}"
-
-        await update.message.reply_text(
-            f"👥 Ton lien de parrainage :\n\n{link}"
-        )
-
-    elif text == "🎁 Bonus":
-
-        cursor.execute(
-            "SELECT referrals FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        referrals = cursor.fetchone()[0]
-
-        if referrals >= 20:
-            await update.message.reply_text(
-                "🎉 Félicitations ! Vous pouvez réclamer votre récompense."
-            )
-        else:
-            reste = 20 - referrals
-
-            await update.message.reply_text(
-                f"🎁 Il vous manque encore {reste} filleul(s) pour débloquer votre bonus."
-            )
-
-       elif text == "📞 Support":
-
-        await update.message.reply_text(
-            "📞 Support\n\n"
-            "Contactez-nous : @bi_kakk"
-        )
 # ===== VÉRIFICATION =====
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
