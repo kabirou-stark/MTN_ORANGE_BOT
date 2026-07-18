@@ -82,6 +82,7 @@ MAIN_MENU = ReplyKeyboardMarkup(
     [
         ["💸 Faire un retrait MTN"],
         ["💸 Faire un retrait Orange"],
+        ["💸 Faire un retrait USDT BEP20"],
         ["💰 Mon solde"],
         ["❓ Comment ça marche"],
         ["👤 Mon compte", "👥 Parrainage"],
@@ -97,7 +98,6 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text
     user = update.effective_user
-
 
     if text == "💰 Mon solde":
 
@@ -134,7 +134,6 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-
         await update.message.reply_text(
             "💸 Retrait MTN\n\n"
             "Votre demande peut être traitée.\n\n"
@@ -153,6 +152,31 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         solde = result[0] if result else 0
 
+        if solde < 5000:
+
+            await update.message.reply_text(
+                "❌ Erreur : solde insuffisant.\n\n"
+                "Le retrait minimum est de 5 000 FCFA."
+            )
+            return
+
+        await update.message.reply_text(
+            "💸 Retrait Orange\n\n"
+            "Votre demande peut être traitée.\n\n"
+            "Envoyez votre numéro Orange et le montant souhaité."
+        )
+
+
+    elif text == "💸 Faire un retrait USDT BEP20":
+
+        cursor.execute(
+            "SELECT balance FROM users WHERE id=?",
+            (user.id,)
+        )
+
+        result = cursor.fetchone()
+
+        solde = result[0] if result else 0
 
         if solde < 5000:
 
@@ -162,16 +186,17 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-
         await update.message.reply_text(
-            "💸 Retrait Orange\n\n"
+            "💸 Retrait USDT BEP20\n\n"
             "Votre demande peut être traitée.\n\n"
-            "Envoyez votre numéro Orange et le montant souhaité."
+            "Envoyez :\n"
+            "🔹 Adresse portefeuille USDT BEP20\n"
+            "🔹 Montant souhaité"
         )
 
 
     elif text == "❓ Comment ça marche":
-
+    
         await update.message.reply_text(
             "🎉 Gagnez jusqu’à 5 000 FCFA grâce au partage ! 💰\n\n"
             "Invitez vos amis à rejoindre notre bot en partageant votre lien de parrainage personnel.\n\n"
