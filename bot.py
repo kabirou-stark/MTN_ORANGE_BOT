@@ -16,14 +16,12 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+
 TOKEN = os.getenv("BOT_TOKEN")
 
-# ===== CONFIGURATION =====
-import sqlite3
+# ===== CONFIG =====
 
-# ===== CONFIGURATION =====
-
-ADMIN_ID = 5269002026  # Ton ID Telegram
+ADMIN_ID = 5269002026
 
 CHANNELS = [
     {
@@ -32,274 +30,133 @@ CHANNELS = [
         "url": "https://t.me/academie_trading_pro",
     },
     {
-        "id": "@leroi5pronos",  # ⚠️ doit correspondre au vrai @ du canal
+        "id": "@leroi5pronos",
         "name": "🔥 Ultras Prono VIP",
         "url": "https://t.me/leroi5pronos",
     }
 ]
 
-# ===== BASE DE DONNÉES =====
+# ===== DATABASE =====
 
 db = sqlite3.connect("bot.db", check_same_thread=False)
-
 cursor = db.cursor()
 
-# ✅ TABLE UNIQUE CORRIGÉE
-
 cursor.execute("""
-
 CREATE TABLE IF NOT EXISTS users (
-
     user_id INTEGER PRIMARY KEY,
-
-    username TEXT,
-
-    joined INTEGER DEFAULT 0,
-
     referrer INTEGER,
-
     referrals INTEGER DEFAULT 0,
-
     balance INTEGER DEFAULT 0
-
 )
-
 """)
 
 db.commit()
-# ===== MENU PRINCIPAL =====
 
+# ===== REGISTER USER =====
 
 def register_user(user_id, referrer=None):
-    cursor.execute("SELECT id FROM users WHERE id=?", (user_id,))
+    cursor.execute("SELECT user_id FROM users WHERE user_id=?", (user_id,))
+    
     if cursor.fetchone():
         return
 
     cursor.execute(
-        "INSERT INTO users(id,referrer) VALUES(?,?)",
+        "INSERT INTO users(user_id, referrer) VALUES(?, ?)",
         (user_id, referrer),
     )
 
     if referrer:
         cursor.execute(
-            "UPDATE users SET referrals=referrals+1 WHERE id=?",
+            "UPDATE users SET referrals = referrals + 1 WHERE user_id=?",
             (referrer,),
         )
 
     db.commit()
 
-
-try:
-    cursor.execute(
-        "ALTER TABLE users ADD COLUMN balance INTEGER DEFAULT 0"
-    )
-    db.commit()
-except:
-    pass
-
-
-# ===== MENU PRINCIPAL =====
+# ===== MENU =====
 
 MAIN_MENU = ReplyKeyboardMarkup(
     [
-        ["💸 Faire un retrait MTN"],
-        ["💸 Faire un retrait Orange"],
-        ["💸 Faire un retrait USDT BEP20"],
+        ["💸 Retrait MTN", "💸 Retrait Orange"],
+        ["💸 Retrait USDT"],
         ["💰 Mon solde"],
-        ["❓ Comment ça marche"],
         ["👤 Mon compte", "👥 Parrainage"],
-        ["🎁 Bonus"],
+        ["🎁 Bonus", "❓ Comment ça marche"],
     ],
     resize_keyboard=True,
 )
 
-
-# ===== MENU =====
+# ===== MENU HANDLER =====
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     text = update.message.text
-    user = update.effective_user
+    user_id = update.effective_user.id
+
+    # récupérer solde
+    cursor.execute("SELECT balance FROM users WHERE user_id=?", (user_id,))
+    result = cursor.fetchone()
+    solde = result[0] if result else 0
 
     if text == "💰 Mon solde":
+        await update.message.reply_text(f"💰 Solde : {solde} FCFA")
 
-        cursor.execute(
-            "SELECT balance FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        solde = result[0] if result else 0
-
-        await update.message.reply_text(
-            f"💰 Votre solde actuel est : {solde} FCFA"
-        )
-
-
-    elif text == "💸 Faire un retrait MTN":
-
-        cursor.execute(
-            "SELECT balance FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        solde = result[0] if result else 0
-
+    elif "Retrait" in text:
         if solde < 5000:
-
             await update.message.reply_text(
-                "❌ Erreur : solde insuffisant.\n\n"
-                "Le retrait minimum est de 5 000 FCFA."
+                "❌ Solde insuffisant (min 5000 FCFA)"
             )
-            return
-
-        await update.message.reply_text(
-            "💸 Retrait MTN\n\n"
-            "Votre demande peut être traitée.\n\n"
-            "Envoyez votre numéro MTN et le montant souhaité."
-        )
-
-
-    elif text == "💸 Faire un retrait Orange":
-
-        cursor.execute(
-            "SELECT balance FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        solde = result[0] if result else 0
-
-        if solde < 5000:
-
+        else:
             await update.message.reply_text(
-                "❌ Erreur : solde insuffisant.\n\n"
-                "Le retrait minimum est de 5 000 FCFA."
+                "✅ Envoyez vos infos de retrait"
             )
-            return
-
-        await update.message.reply_text(
-            "💸 Retrait Orange\n\n"
-            "Votre demande peut être traitée.\n\n"
-            "Envoyez votre numéro Orange et le montant souhaité."
-        )
-
-
-    elif text == "💸 Faire un retrait USDT BEP20":
-
-        cursor.execute(
-            "SELECT balance FROM users WHERE id=?",
-            (user.id,)
-        )
-
-        result = cursor.fetchone()
-
-        solde = result[0] if result else 0
-
-        if solde < 5000:
-
-            await update.message.reply_text(
-                "❌ Erreur : solde insuffisant.\n\n"
-                "Le retrait minimum est de 5 000 FCFA."
-            )
-            return
-
-        await update.message.reply_text(
-            "💸 Retrait USDT BEP20\n\n"
-            "Votre demande peut être traitée.\n\n"
-            "Envoyez :\n"
-            "🔹 Adresse portefeuille USDT BEP20\n"
-            "🔹 Montant souhaité"
-        )
-
-
-    elif text == "❓ Comment ça marche":
-    
-        await update.message.reply_text(
-            "🎉 Gagnez jusqu’à 5 000 FCFA grâce au partage ! 💰\n\n"
-            "Invitez vos amis à rejoindre notre bot en partageant votre lien de parrainage personnel.\n\n"
-            "✅ Objectif : atteindre le nombre de partages ou de filleuls requis.\n\n"
-            "🎁 Récompense : recevez 5 000 FCFA une fois l’objectif atteint et validé.\n\n"
-            "🔗 Partagez votre lien dès maintenant et commencez à gagner !\n\n"
-            "⚠️ Seuls les partages et les inscriptions valides sont pris en compte. "
-            "Toute tentative de fraude entraînera l’annulation des récompenses."
-        )
-
 
     elif text == "👤 Mon compte":
-
         cursor.execute(
-            "SELECT referrals FROM users WHERE id=?",
-            (user.id,)
+            "SELECT referrals FROM users WHERE user_id=?",
+            (user_id,),
         )
-
-        result = cursor.fetchone()
-
-        referrals = result[0] if result else 0
+        referrals = cursor.fetchone()[0]
 
         await update.message.reply_text(
-            f"👤 Mon compte\n\n"
-            f"🆔 ID : {user.id}\n"
-            f"👥 Filleuls : {referrals}"
+            f"👤 ID: {user_id}\n👥 Filleuls: {referrals}"
         )
-
 
     elif text == "👥 Parrainage":
-
         bot_username = (await context.bot.get_me()).username
+        link = f"https://t.me/{bot_username}?start={user_id}"
 
-        link = f"https://t.me/{bot_username}?start={user.id}"
-
-        await update.message.reply_text(
-            f"👥 Ton lien de parrainage :\n\n{link}"
-        )
-
+        await update.message.reply_text(f"🔗 Ton lien:\n{link}")
 
     elif text == "🎁 Bonus":
-
         cursor.execute(
-            "SELECT referrals FROM users WHERE id=?",
-            (user.id,)
+            "SELECT referrals FROM users WHERE user_id=?",
+            (user_id,),
         )
-
-        result = cursor.fetchone()
-
-        referrals = result[0] if result else 0
-
+        referrals = cursor.fetchone()[0]
 
         if referrals >= 20:
-
-            await update.message.reply_text(
-                "🎉 Félicitations ! Vous pouvez réclamer votre récompense."
-            )
-
+            await update.message.reply_text("🎉 Bonus débloqué !")
         else:
-
-            reste = 20 - referrals
-
             await update.message.reply_text(
-                f"🎁 Il vous manque encore {reste} filleul(s) pour débloquer votre bonus."
+                f"Il te manque {20 - referrals} filleuls"
             )
-    
-# ===== /START =====
+
+    elif text == "❓ Comment ça marche":
+        await update.message.reply_text(
+            "Invite tes amis et gagne de l'argent 💰"
+        )
+
+# ===== START =====
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     user = update.effective_user
 
     referrer = None
-
     if context.args:
         try:
             referrer = int(context.args[0])
-
             if referrer == user.id:
                 referrer = None
-
         except:
             pass
 
@@ -308,66 +165,49 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = []
 
     for c in CHANNELS:
-        keyboard.append(
-            [InlineKeyboardButton(c["name"], url=c["url"])]
-        )
+        keyboard.append([InlineKeyboardButton(c["name"], url=c["url"])])
 
     keyboard.append(
-        [
-            InlineKeyboardButton(
-                "✅ J'ai rejoint",
-                callback_data="check",
-            )
-        ]
+        [InlineKeyboardButton("✅ J'ai rejoint", callback_data="check")]
     )
 
     await update.message.reply_text(
-        "👋 Bienvenue !\n\n"
-        "Avant de continuer, rejoignez tous les canaux ci-dessous puis cliquez sur "
-        "« ✅ J'ai rejoint ».",
+        "👋 Rejoins les canaux puis clique sur le bouton",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
-# ===== VÉRIFICATION =====
+# ===== CHECK =====
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     query = update.callback_query
-
     await query.answer()
 
-    user = query.from_user.id
+    user_id = query.from_user.id
 
     for channel in CHANNELS:
-
         member = await context.bot.get_chat_member(
-            channel["id"],
-            user,
+            channel["id"], user_id
         )
 
         if member.status in ["left", "kicked"]:
-
             await query.answer(
-                "Vous devez rejoindre tous les canaux.",
+                "❌ Rejoins tous les canaux",
                 show_alert=True,
             )
             return
 
     await query.message.reply_text(
-        "✅ Vérification réussie !",
+        "✅ Accès autorisé",
         reply_markup=MAIN_MENU,
     )
 
-
-# ===== LANCEMENT =====
+# ===== RUN =====
 
 app = Application.builder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(check, pattern="check"))
-app.add_handler(
-    MessageHandler(filters.TEXT & ~filters.COMMAND, menu)
-)
-print("Bot lancé...")
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu))
 
+print("Bot lancé 🚀")
 app.run_polling()
