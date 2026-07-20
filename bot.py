@@ -19,16 +19,12 @@ from telegram.ext import (
 TOKEN = os.getenv("BOT_TOKEN")
 
 # ===== CONFIGURATION =====
+import sqlite3
 
-ADMIN_ID = 5269002026  # Remplace par ton identifiant Telegram
+# ===== CONFIGURATION =====
 
-CHANNELS = [
-    {
-        "id": "@academie_trading_pro",
-        "name": "🎓📈 Académie du Trading",
-        "url": "https://t.me/academie_trading_pro",
-    }
-]
+ADMIN_ID = 5269002026  # Ton ID Telegram
+
 CHANNELS = [
     {
         "id": "@academie_trading_pro",
@@ -36,11 +32,28 @@ CHANNELS = [
         "url": "https://t.me/academie_trading_pro",
     },
     {
-        "id": "@ultras_prono",  # ton nouveau canal
+        "id": "@leroi5pronos",  # ⚠️ doit correspondre au vrai @ du canal
         "name": "🔥 Ultras Prono VIP",
         "url": "https://t.me/leroi5pronos",
     }
 ]
+
+# ===== BASE DE DONNÉES =====
+
+db = sqlite3.connect("bot.db", check_same_thread=False)
+cursor = db.cursor()
+
+# Table des utilisateurs
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER PRIMARY KEY,
+    username TEXT,
+    joined INTEGER DEFAULT 0
+)
+""")
+
+db.commit()
+
 # ===== BASE DE DONNÉES =====
 
 db = sqlite3.connect("bot.db", check_same_thread=False)
