@@ -60,8 +60,8 @@ db = sqlite3.connect("bot.db", check_same_thread=False)
 cursor = db.cursor()
 
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS users(
-id INTEGER PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS users(user_id
+ INTEGER PRIMARY KEY,
 referrer INTEGER,
 referrals INTEGER DEFAULT 0,
 balance INTEGER DEFAULT 0
