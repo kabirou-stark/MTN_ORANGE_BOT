@@ -29,7 +29,18 @@ CHANNELS = [
         "url": "https://t.me/academie_trading_pro",
     }
 ]
-
+CHANNELS = [
+    {
+        "id": "@academie_trading_pro",
+        "name": "🎓📈 Académie du Trading",
+        "url": "https://t.me/academie_trading_pro",
+    },
+    {
+        "id": "@ultras_prono",  # ton nouveau canal
+        "name": "🔥 Ultras Prono VIP",
+        "url": "https://t.me/leroi5pronos",
+    }
+]
 # ===== BASE DE DONNÉES =====
 
 db = sqlite3.connect("bot.db", check_same_thread=False)
