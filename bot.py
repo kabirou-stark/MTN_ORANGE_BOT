@@ -41,31 +41,29 @@ CHANNELS = [
 # ===== BASE DE DONNÉES =====
 
 db = sqlite3.connect("bot.db", check_same_thread=False)
+
 cursor = db.cursor()
 
-# Table des utilisateurs
+# ✅ TABLE UNIQUE CORRIGÉE
+
 cursor.execute("""
+
 CREATE TABLE IF NOT EXISTS users (
+
     user_id INTEGER PRIMARY KEY,
+
     username TEXT,
-    joined INTEGER DEFAULT 0
+
+    joined INTEGER DEFAULT 0,
+
+    referrer INTEGER,
+
+    referrals INTEGER DEFAULT 0,
+
+    balance INTEGER DEFAULT 0
+
 )
-""")
 
-db.commit()
-
-# ===== BASE DE DONNÉES =====
-
-db = sqlite3.connect("bot.db", check_same_thread=False)
-cursor = db.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users(user_id
- INTEGER PRIMARY KEY,
-referrer INTEGER,
-referrals INTEGER DEFAULT 0,
-balance INTEGER DEFAULT 0
-)
 """)
 
 db.commit()
